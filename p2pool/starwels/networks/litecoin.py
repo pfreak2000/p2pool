@@ -13,7 +13,7 @@ ADDRESS_VERSION = 48
 RPC_PORT = 9352
 RPC_CHECK = defer.inlineCallbacks(lambda starwelsd: defer.returnValue(
             'litecoinaddress' in (yield starwelsd.rpc_help()) and
-            not (yield starwelsd.rpc_getinfo())['testnet']
+            (yield starwelsd.rpc_getblockchaininfo())['chain'] != 'test'
         ))
 SUBSIDY_FUNC = lambda height: 50*100000000 >> (height + 1)//840000
 POW_FUNC = lambda data: pack.IntType(256).unpack(__import__('ltc_scrypt').getPoWHash(data))

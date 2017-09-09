@@ -13,7 +13,7 @@ ADDRESS_VERSION = 52
 RPC_PORT = 8336
 RPC_CHECK = defer.inlineCallbacks(lambda starwelsd: defer.returnValue(
             'namecoinaddress' in (yield starwelsd.rpc_help()) and
-            not (yield starwelsd.rpc_getinfo())['testnet']
+            (yield starwelsd.rpc_getblockchaininfo())['chain'] != 'test'
         ))
 SUBSIDY_FUNC = lambda height: 50*100000000 >> (height + 1)//210000
 POW_FUNC = data.hash256

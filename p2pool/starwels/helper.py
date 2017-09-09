@@ -13,14 +13,14 @@ def check(starwelsd, net):
     if not (yield net.PARENT.RPC_CHECK(starwelsd)):
         print >>sys.stderr, "    Check failed! Make sure that you're connected to the right starwelsd with --starwelsd-rpc-port!"
         raise deferral.RetrySilentlyException()
-    
-    version_check_result = net.VERSION_CHECK((yield starwelsd.rpc_getinfo())['version'])
+
+    version_check_result = net.VERSION_CHECK((yield starwelsd.rpc_getnetworkinfo())['version'])
     if version_check_result == True: version_check_result = None # deprecated
     if version_check_result == False: version_check_result = 'Coin daemon too old! Upgrade!' # deprecated
     if version_check_result is not None:
         print >>sys.stderr, '    ' + version_check_result
         raise deferral.RetrySilentlyException()
-    
+
     try:
         blockchaininfo = yield starwelsd.rpc_getblockchaininfo()
         softforks_supported = set(item['id'] for item in blockchaininfo.get('softforks', []))
@@ -55,8 +55,7 @@ def getwork(starwelsd, use_getblocktemplate=False):
         except jsonrpc.Error_for_code(-32601): # Method not found
             print >>sys.stderr, 'Error: Starwels version too old! Upgrade to v0.5 or newer!'
             raise deferral.RetrySilentlyException()
-    work['transactions'] = [x for x in work['transactions'] if x['txid'] == x['hash']] # don't mine segwit txs for now
-    packed_transactions = [(x['data'] if isinstance(x, dict) else x).decode('hex') for x in work['transactions']]
+    packed_transactions = [x['data'].decode('hex') for x in work['transactions'] if len(x.get('depends', [])) == 0]
     if 'height' not in work:
         work['height'] = (yield starwelsd.rpc_getblock(work['previousblockhash']))['height'] + 1
     elif p2pool.DEBUG:
